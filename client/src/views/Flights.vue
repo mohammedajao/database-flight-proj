@@ -41,6 +41,13 @@
           <input v-model="arrivalDateTime" class="form-control" type="datetime-local" id="arrivalDateTime">
         </div>
 
+        <div class="col-12 col-sm-6">
+          <label for="airlineSelect">Destination City</label>
+          <select v-model="airline" class="form-select" id="airlineSelect">
+            <option v-for="(airline, index) in airlines" :key="index">{{ airline.name }}</option>
+          </select>
+        </div>
+
       </div>
 
       <button class="btn custom-btn">Submit</button>
@@ -81,9 +88,11 @@ export default {
       sourceAirport: '',
       departureDateTime: '',
       arrivalDateTime: '',
+      airline: '',
       airports: [],
       cities: {},
-      flights: []
+      flights: [],
+      airlines:[]
     }
   },
   methods: {
@@ -107,8 +116,10 @@ export default {
         departure_airport: this.sourceAirport,
         arrival_airport: this.destinationAirport,
         departure_city: this.sourceCity,
-        arrival_city: this.destinationCity
+        arrival_city: this.destinationCity,
+        airline: this.airline
       }).then((res) => {
+        this.flights = []
         res.data.flights.map(x => {
           this.flights.push(x)
         })
@@ -129,6 +140,18 @@ export default {
         this.flights.push(x)
       })
     }).catch(err => console.log(err))
+
+    axios.get('airlines').then(res => {
+      console.log(res.data)
+      const oldAirlines = JSON.parse(JSON.stringify(this.airlines))
+
+      res.data.airlines.map(x => {
+         x.name = x.name.replace('%20', ' ')
+         oldAirlines.push(x)
+      })
+      this.airlines = oldAirlines
+
+    })
   }
 }
 </script>

@@ -1,6 +1,21 @@
 <template lang="html">
 <div class="container">
   <div class="container basic-sec">
+    <h5>Purchased Flights</h5>
+    <div class="container flights-bought">
+      <div class="row container flight-purchased col-12 col-md-6" v-for="(flight, index) in purchasedFlights" :key="index">
+        <p>Flight Number: {{flight.flight_num}}</p><br/>
+        <p>Airline: {{ flight.owned_by.replace('%20', ' ') }}</p>
+        <p>Departing: {{ new Date(flight.depart_date_time) }}</p>
+        <p v-if="flight.arrival_date_time">Arriving {{ new Date(flight.arrival_date_time )}}</p>
+        <p>From: {{ flight.departure_airport }}</p>
+        <p v-if="flight.arrival_airport">To: {{ flight.arrival_airport }}</p>
+        <p>Status: {{ constants.statuses[flight.status] }}</p>
+        <p>Type: {{ constants.types[flight.type] }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="container basic-sec">
     <form action="" @submit.prevent="requestSpendingInRange()">
 
       <div class="col-12 col-sm-6">
@@ -43,7 +58,14 @@ export default {
     return {
       yearlySpending: 0,
       startTime: '',
-      endTime: ''
+      endTime: '',
+      purchasedFlights: [],
+      constants: {
+        statuses: ['ON GOING', 'DELAYED', 'CANCELLED'],
+        types: ['ONE WAY', 'ROUND TRIP'],
+        enumStatus: { 'ON GOING': 1, 'DELAYED': 2, 'CANCELLED': 3},
+        enumType: {'ONE WAY': 1, 'ROUND TRIP': 2}
+      }
     }
   },
   methods: {
@@ -84,6 +106,14 @@ export default {
     }
     axios.post('/purchases/get-spending', data, config).then(res => {
       this.yearlySpending = res.data.annual_payment[0][0].AMOUNT
+    }).catch(err => console.log(err))
+
+    axios.get('/flights/fetch-customer-flights', config).then(res => {
+      console.log("Client Flights", res.data)
+      const oldFlights = JSON.parse(JSON.stringify(this.purchasedFlights))
+      res.data.purchased_flights[0].map(x => oldFlights.push(x))
+      this.purchasedFlights = oldFlights
+      console.log("HEHE", this.purchasedFlights)
     }).catch(err => console.log(err))
 
     axios.post('/purchases/get-monthly-spending', { email: this.user.data.user_email }, config).then(res => {
@@ -130,6 +160,12 @@ export default {
   text-transform: uppercase;
   background-color: rgb(255, 45, 32);
   border: 0;
+}
+
+.flight-purchased {
+  border: solid 1px gray;
+  border-radius:  5px;
+  padding: 10px;
 }
 
 </style>

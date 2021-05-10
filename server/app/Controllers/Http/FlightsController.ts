@@ -51,7 +51,7 @@ export default class FlightsController {
     }
 
     public async search({ request, response, params }: HttpContextContract) {
-        const { depart_date_time, arrival_date_time, arrival_airport, departure_airport, arrival_city, departure_city } = request.all()
+        const { depart_date_time, arrival_date_time, arrival_airport, departure_airport, arrival_city, departure_city, airline } = request.all()
         let flightOutput = Flight.query().select('*')
         // const departFlights = Database.rawQuery("SELECT id, departure_airport FROM Flights AS f WHERE f.departure_airport IN (SELECT name FROM Airports AS ap WHERE ap.city = ?)", departure_city)
         // const arrivalFlights = Database.rawQuery("SELECT id, arrival_airport FROM Flights AS f WHERE f.arrival_airport IN (SELECT name FROM Airports AS ap WHERE ap.city = ?)", arrival_city)
@@ -66,6 +66,9 @@ export default class FlightsController {
         if(departure_city) {
             const departFlights = Database.rawQuery("SELECT id, departure_airport FROM Flights AS f WHERE f.departure_airport IN (SELECT name FROM Airports AS ap WHERE ap.city = ?)", departure_city)
             flightOutput = flightOutput.whereIn(['id', 'departure_airport'], departFlights)
+        }
+        if(airline) {
+            flightOutput = flightOutput.where({ owned_by: airline.replace(' ', '%20') })
         }
         if(arrival_city) {
             const arrivalFlights = Database.rawQuery("SELECT id, arrival_airport FROM Flights AS f WHERE f.arrival_airport IN (SELECT name FROM Airports AS ap WHERE ap.city = ?)", arrival_city)
@@ -189,6 +192,18 @@ export default class FlightsController {
 
         }
         return response.json({ data: flight, bookings: hasCount, maxOccupancy: airplane.seats, bought: canComment, avg_rating: avgRating })
+    }
+
+    public async fetchCustomerFlights({ auth, response }: HttpContextContract) {
+        const user = await auth.user
+        if(!user || user.type != 1) {
+            return response.json({
+                error: 'User must be a customer.'
+            })
+        }
+
+        const purchasedFlights = await Database.rawQuery('SELECT * FROM Flights AS f WHERE f.id IN (SELECT ps.flight_id FROM PurchaseSources AS ps WHERE ps.purchaser_email = ?)', [user.email])
+        return response.json({ purchased_flights: purchasedFlights })
     }
 
     public async getFlightByCustomerAirline({ request, auth, response }: HttpContextContract) {
