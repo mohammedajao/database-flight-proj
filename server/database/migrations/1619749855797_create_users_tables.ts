@@ -10,7 +10,7 @@ export default class Users extends BaseSchema {
       table.string('password').notNullable()
       table.integer('type').unsigned().notNullable().defaultTo(1)
       table.string('remember_me_token').nullable()
-      table.timestamps(true)
+      table.timestamps(true, true)
     })
   }
 

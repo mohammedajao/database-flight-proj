@@ -11,7 +11,7 @@ export default class PurchaseSources extends BaseSchema {
       table.integer('flight_id').unsigned().references('id').inTable('Flights').onDelete('CASCADE').onUpdate('CASCADE').notNullable()
       table.integer('purchase_id').unsigned().references('id').inTable('Purchases').notNullable().onDelete('CASCADE').onUpdate('CASCADE')
       table.integer('purchased_for').unsigned().references('id').inTable('Purchases').nullable().onDelete('CASCADE').onUpdate('CASCADE')
-      table.timestamps(true)
+      table.timestamps(true, true)
     })
   }
 
